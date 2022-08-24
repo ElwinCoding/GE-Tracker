@@ -26,4 +26,4 @@ class database:
 
 guh = database()
 # guh.print_database()
-#print(type(guh.idLookup("12259", 1)))
+#print((guh.idLookup("27202")))

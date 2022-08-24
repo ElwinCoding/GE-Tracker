@@ -31,20 +31,20 @@ for item in response_10m["data"]:
     low = response_latest["data"][item]["low"]
     avg = response_10m["data"][item]["avgHighPrice"]
 
+
     if avg != None and high < low:
-        current = response_latest["data"][item]["high"]
-        difference = int((avg - current)/avg * 100)
+        difference = int((avg - high)/avg * 100)
         margin = low - high
         potential = margin * name.idLookup(item, 1)
-        if difference >= 15 and potential >= 100000:
-                dumps.append([difference, item, margin, potential])
+        if difference >= 10 and potential >= 100000:
+            volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
+            dumps.append([difference, item, high, low, volume, potential])
 
 dumps.sort(reverse= True)
 
 for x in dumps:
-    print(name.idLookup(x[1]), x[1:])
+    print(name.idLookup(x[1]), "buy price:", x[2], "| sell price:", x[3], "| 24h volume:", x[4], "| potential:", x[5])
 
 #print(response_24h["data"][""])
 # now = time.time()
 # print(now / 300)
-
