@@ -1,18 +1,13 @@
-import requests
+import json
 
-url = "https://prices.runescape.wiki/api/v1/osrs/mapping"
+with open("mapping.json") as file:
+    map = json.load(file)
 
-headers = {
-    "User-Agent": "ID to item - @Roflnator#3778"
-}
-
-response = requests.get(url, headers=headers)
-response = response.json()
 # class to store the dictionaries
 class database:
     def __init__(self):
         self.ItemID = {}
-        for item in response:
+        for item in map:
             self.ItemID[str(item["id"])] = [item["name"], item.get("limit", 1)]
 
     def print_database(self):
@@ -24,6 +19,7 @@ class database:
         else:
             return self.ItemID[id][index]
 
-guh = database()
+# guh = database()
 # guh.print_database()
-#print(type(guh.idLookup("12259", 1)))
+# guh.print_database()
+#print((guh.idLookup("27202")))
