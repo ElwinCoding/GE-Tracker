@@ -8,17 +8,22 @@ headers = {
 
 response = requests.get(url, headers=headers)
 response = response.json()
-
 # class to store the dictionaries
 class database:
     def __init__(self):
         self.ItemID = {}
         for item in response:
-            self.ItemID[item["id"]] = [item["name"]]
+            self.ItemID[str(item["id"])] = [item["name"], item.get("limit", 1)]
 
     def print_database(self):
         print(self.ItemID)
 
-    def IDLookup(self, ID):
-        return self.ItemID[ID]
+    def idLookup(self, id, index=None):
+        if index == None:
+            return self.ItemID[id]
+        else:
+            return self.ItemID[id][index]
 
+guh = database()
+# guh.print_database()
+#print(type(guh.idLookup("12259", 1)))
