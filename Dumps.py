@@ -1,6 +1,7 @@
 import requests
 import ItemID
 import time
+import tabulate
 
 url_latest = "https://prices.runescape.wiki/api/v1/osrs/latest"
 url_1h = "https://prices.runescape.wiki/api/v1/osrs/1h"
@@ -27,14 +28,17 @@ dumps = []
 crashes = []
 name = ItemID.itemID()
 
+def volume_check(volume, margin, item):
+    if margin >= 200000:
+        return True
+    elif margin <= 200000 and volume > name.idLookup(item,1):
+        return True
+    else:
+        return False
+
 for item in response_10m["data"]:
     high = response_latest["data"][item]["high"]
     low = response_latest["data"][item]["low"]
-
-    # try:
-    #     avg = response_10m["data"][item]["avgHighPrice"]
-    # except KeyError:
-    #     continue
 
     try:
         volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
@@ -48,39 +52,35 @@ for item in response_10m["data"]:
         difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
         potential = margin * name.idLookup(item, 1)
-        if difference >= 10 and potential >= 100000 and volume > name.idLookup(item,1):
-            dumps.append([difference, item, high, low, volume, potential, volume])
+        if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
+            dumps.append([name.idLookup(item, 0), high, low, volume, name.idLookup(item, 1),potential])
 
     elif avg_sell != None and high > low:
         difference = int((avg_sell - low)/avg_sell * 100)
         margin = high - low
         potential = margin * name.idLookup(item, 1)
-        if difference >= 10 and potential >= 100000 and volume > name.idLookup(item,1):
-            crashes.append([difference, item, high, low, volume, potential, volume])
+        if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
+            crashes.append([name.idLookup(item, 0), high, low, volume, name.idLookup(item, 1),potential])
 
 dumps.sort(reverse= True)
 crashes.sort(reverse= True)
 
+columns = ["Item", "Buy Price", "Sell Price", "24h Volume", "Limit", "Potential"]
+
 if len(dumps) != 0:
-    print(f"|{'':-^150}|")
-    print(f"|{'Dumps':^150}|")
-    print(f"|{'':-^150}|")
-    print(f"|{'Item':^30}|{'Buy Price':^29}|{'Sell Price':^29}|{'24h Volume':^29}|{'Potential':^29}|")
-    print(f"|{'':-^150}|")
-    for item in dumps:
-        print(f"|{name.idLookup(item[1],0):<30}|{item[2]:>29}|{item[3]:>29}|{item[4]:>29}|{item[5]:>29}|")
+    print(f"{'':->5}")
+    print("Dumps")
+    print(f"{'':->5}")
+    print(tabulate.tabulate(dumps, headers=columns, tablefmt="github"))
 else:
     print("No dumps were detected")
 
 if len(crashes) != 0:
-    print(f"|{'':-^150}|")
-    print(f"|{'Crashes':^150}|")
-    print(f"|{'':-^150}|")
-    print(f"|{'Item':^30}|{'Buy Price':^29}|{'Sell Price':^29}|{'24h Volume':^29}|{'Potential':^29}|")
-    print(f"|{'':-^150}|")
-    for item in crashes:
-        print(f"|{name.idLookup(item[1],0):<30}|{item[2]:>29}|{item[3]:>29}|{item[4]:>29}|{item[5]:>29}|")
-    print(f"|{'':-^150}|")
+    print(f"{'':->7}")
+    print("Crashes")
+    print(f"{'':->7}")
+    print(tabulate.tabulate(crashes, headers=columns, tablefmt="github"))
+
 else:
     print("No crashes were detected")
 # now = time.time()
