@@ -24,22 +24,26 @@ response_24h = requests.get(url_24h, headers=headers)
 response_24h = response_24h.json()
 
 dumps = []
-name = ItemID.database()
+name = ItemID.itemID()
 
 for item in response_10m["data"]:
     high = response_latest["data"][item]["high"]
     low = response_latest["data"][item]["low"]
-    avg = response_10m["data"][item]["avgHighPrice"]
+
+    try:
+        avg = response_10m["data"][item]["avgHighPrice"]
+    except KeyError:
+        continue
 
     try:
         volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
     except KeyError:
         continue
+
     if avg != None and high < low:
         difference = int((avg - high)/avg * 100)
         margin = low - high
         potential = margin * name.idLookup(item, 1)
-        volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
         if difference >= 10 and potential >= 100000 and volume > name.idLookup(item,1):
             dumps.append([difference, item, high, low, volume, potential])
 

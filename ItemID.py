@@ -4,7 +4,7 @@ with open("mapping.json") as file:
     map = json.load(file)
 
 # class to store the dictionaries
-class database:
+class itemID:
     def __init__(self):
         self.ItemID = {}
         for item in map:
