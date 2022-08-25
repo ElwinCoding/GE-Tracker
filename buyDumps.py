@@ -24,34 +24,64 @@ response_24h = requests.get(url_24h, headers=headers)
 response_24h = response_24h.json()
 
 dumps = []
+crashes = []
 name = ItemID.itemID()
 
 for item in response_10m["data"]:
     high = response_latest["data"][item]["high"]
     low = response_latest["data"][item]["low"]
 
-    try:
-        avg = response_10m["data"][item]["avgHighPrice"]
-    except KeyError:
-        continue
+    # try:
+    #     avg = response_10m["data"][item]["avgHighPrice"]
+    # except KeyError:
+    #     continue
 
     try:
         volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
     except KeyError:
         continue
 
-    if avg != None and high < low:
-        difference = int((avg - high)/avg * 100)
+    avg_buy = response_10m["data"][item]["avgHighPrice"]
+    avg_sell = response_10m["data"][item]["avgLowPrice"]
+
+    if avg_buy != None and high < low:
+        difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
         potential = margin * name.idLookup(item, 1)
         if difference >= 10 and potential >= 100000 and volume > name.idLookup(item,1):
-            dumps.append([difference, item, high, low, volume, potential])
+            dumps.append([difference, item, high, low, volume, potential, volume])
+
+    elif avg_sell != None and high > low:
+        difference = int((avg_sell - low)/avg_sell * 100)
+        margin = high - low
+        potential = margin * name.idLookup(item, 1)
+        if difference >= 10 and potential >= 100000 and volume > name.idLookup(item,1):
+            crashes.append([difference, item, high, low, volume, potential, volume])
 
 dumps.sort(reverse= True)
+crashes.sort(reverse= True)
 
-for x in dumps:
-    print(name.idLookup(x[1]), "buy price:", x[2], "| sell price:", x[3], "| 24h volume:", x[4], "| potential:", x[5])
+if len(dumps) != 0:
+    print(f"|{'':-^150}|")
+    print(f"|{'Dumps':^150}|")
+    print(f"|{'':-^150}|")
+    print(f"|{'Item':^30}|{'Buy Price':^29}|{'Sell Price':^29}|{'24h Volume':^29}|{'Potential':^29}|")
+    print(f"|{'':-^150}|")
+    for item in dumps:
+        print(f"|{name.idLookup(item[1],0):<30}|{item[2]:>29}|{item[3]:>29}|{item[4]:>29}|{item[5]:>29}|")
+else:
+    print("No dumps were detected")
 
-
+if len(crashes) != 0:
+    print(f"|{'':-^150}|")
+    print(f"|{'Crashes':^150}|")
+    print(f"|{'':-^150}|")
+    print(f"|{'Item':^30}|{'Buy Price':^29}|{'Sell Price':^29}|{'24h Volume':^29}|{'Potential':^29}|")
+    print(f"|{'':-^150}|")
+    for item in crashes:
+        print(f"|{name.idLookup(item[1],0):<30}|{item[2]:>29}|{item[3]:>29}|{item[4]:>29}|{item[5]:>29}|")
+    print(f"|{'':-^150}|")
+else:
+    print("No crashes were detected")
 # now = time.time()
 # print(now / 300)
