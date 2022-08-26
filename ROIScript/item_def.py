@@ -3897,7 +3897,7 @@ class ItemToID:
 
 class IDToItem:
     def __init__(self):
-        self.dict = {
+        self._dict = {
             "10344": "3rd age amulet",
             "20011": "3rd age axe",
             "12424": "3rd age bow",
@@ -7790,3 +7790,6 @@ class IDToItem:
             "12934": "Zulrah's scales",
             "22647": "Zuriel's staff",
         }
+
+    def getItemName(self, item_id: str):
+        return self._dict[item_id]
