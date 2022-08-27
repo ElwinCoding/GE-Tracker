@@ -1,5 +1,6 @@
 import requests
 
+
 class APIResources:
     def __init__(self, headers):
         self.base_url = 'https://prices.runescape.wiki/api/v1/osrs'
@@ -20,7 +21,7 @@ class APIResources:
     def getLatestUrl(self):
         return self.base_url + "mapping"
 
-    def get5m(self, timestamp):
+    def get5m(self, timestamp=None):
         return requests.get(self.get5mUrl(), headers=self.headers, params=timestamp)
 
     def get1h(self, timestamp: str = None):
