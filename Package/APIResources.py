@@ -19,24 +19,24 @@ class APIResources:
         return self.base_url + "/mapping"
 
     def getLatestUrl(self):
-        return self.base_url + "mapping"
+        return self.base_url + "/latest"
 
     def get5m(self, timestamp=None):
-        return requests.get(self.get5mUrl(), headers=self.headers, params=timestamp)
+        return requests.get(self.get5mUrl(), headers=self.headers, params=timestamp).json()
 
     def get1h(self, timestamp: str = None):
         payload = {"timestamp": timestamp}
-        return requests.get(self.get1hUrl(), headers=self.headers, params=payload)
+        return requests.get(self.get1hUrl(), headers=self.headers, params=payload).json()
 
     def getTimeSeries(self, item_id: str = None, timestep: str = None):
         payload = {"id": item_id, "timestep": timestep}
-        return requests.get(self.getTimeSeriesUrl(), headers=self.headers, params=payload)
+        return requests.get(self.getTimeSeriesUrl(), headers=self.headers, params=payload).json()
 
     def getLatest(self, item_id: str = None):
         payload = {"id": item_id}
-        return requests.get(self.getLatestUrl(), headers=self.headers, params=payload)
+        return requests.get(self.getLatestUrl(), headers=self.headers, params=payload).json()
 
     def getMapping(self):
-        return requests.get(self.getLatestUrl(), headers=self.headers)
+        return requests.get(self.getLatestUrl(), headers=self.headers).json()
 
 

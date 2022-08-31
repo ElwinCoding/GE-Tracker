@@ -1,10 +1,9 @@
 import sys
 import threading
+import time
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
 from Package.APIResources import APIResources
-import ItemID
-
 
 def main():
     headers = {
@@ -12,12 +11,37 @@ def main():
     }
 
     api = APIResources(headers=headers)
-    sample = []
+    samples = []
     while True:
         reply = api.getLatest()
-        sample.append(reply)
-        if len(sample) < 10:
-            print("guh")
+        samples.append(reply)
+        if len(samples) < 10:
+            pass
+        elif len(samples) == 61:
+            samples.pop()
+        processing_thread = threading.Thread(target=process, args=samples)
+        processing_thread.start()
+        time.sleep(60)
+        processing_thread.join()
+
+
+def process(samples):
+    for sample in samples:
+        pass
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

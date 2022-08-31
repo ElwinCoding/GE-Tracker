@@ -36,7 +36,6 @@ def main():
     }
     arguments = ParsedArguments()
     api = APIResources(headers=headers)
-
     id_map = IDToItem()
 
     if arguments.roi:
