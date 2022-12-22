@@ -1,6 +1,7 @@
 import requests
 
 class APIResourcesConstants:
+    BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs'
     FIVE_MINUTES = "/5m"
     ONE_HOUR = "/1h"
     TIME_SERIES = "/timeseries"
@@ -10,7 +11,7 @@ class APIResourcesConstants:
 
 class APIResources:
     def __init__(self, headers):
-        self.base_url = 'https://prices.runescape.wiki/api/v1/osrs'
+        self.base_url = APIResourcesConstants.BASE_URL
         self.headers = headers
 
     def get5mUrl(self):
@@ -44,6 +45,6 @@ class APIResources:
         return requests.get(self.getLatestUrl(), headers=self.headers, params=payload).json()
 
     def getMapping(self):
-        return requests.get(self.getLatestUrl(), headers=self.headers).json()
+        return requests.get(self.getMappingUrl(), headers=self.headers).json()
 
 

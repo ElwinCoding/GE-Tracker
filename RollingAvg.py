@@ -3,7 +3,7 @@ import threading
 import time
 from os import path
 sys.path.append(path.dirname(path.dirname(path.abspath(__file__))))
-from Package.APIResources import APIResources
+from APIResources import APIResources
 
 def main():
     headers = {

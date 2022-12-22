@@ -1,20 +1,40 @@
-import json
+from APIResources import APIResources
 
-with open("mapping.json") as file:
-    map = json.load(file)
+headers = {
+    "User-Agent": "ID to item - @Roflnator#3778"
+}
 
-# class to store the dictionaries
+
+class ItemIDConstants:
+    ITEM_NAME = 0
+    ITEM_LIMIT = 1
+
+
 class ItemID:
+    """
+    Class to store the mappings between item ID and item name.
+    """
     def __init__(self):
-        self.ItemID = {}
-        for item in map:
-            self.ItemID[str(item["id"])] = [item["name"], item.get("limit", 1)]
+        self.item_ids = {}
+        self._initializeItemIDs()
 
-    def print_database(self):
-        print(self.ItemID)
+    def _initializeItemIDs(self):
+        api = APIResources(headers=headers)
+        response = api.getMapping()
+        for item in response:
+            self.item_ids[str(item["id"])] = [item["name"], item.get("limit", 1)]
+
+    def printItemIDsMapping(self):
+        print(self.item_ids)
 
     def idLookup(self, id, index=None):
-        if index == None:
-            return self.ItemID[id]
+        if index is None:
+            return self.item_ids[id]
         else:
-            return self.ItemID[id][index]
+            return self.item_ids[id][index]
+
+    def getName(self, id: str) -> str:
+        return self.item_ids[id][ItemIDConstants.ITEM_NAME]
+
+    def getLimit(self, id: str) -> int:
+        return self.item_ids[id][ItemIDConstants.ITEM_LIMIT]

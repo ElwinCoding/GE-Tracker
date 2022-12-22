@@ -1,5 +1,5 @@
 import requests
-import ItemID
+from ItemID import ItemID
 import time
 import tabulate
 
@@ -26,7 +26,7 @@ response_24h = response_24h.json()
 
 dumps = []
 crashes = []
-name = ItemID.itemID()
+name = ItemID()
 
 def volume_check(volume, margin, item):
     if margin >= 200000:
