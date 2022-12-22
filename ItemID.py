@@ -43,24 +43,23 @@ class ItemInfo:
         )
 
 
-class ItemMap:
+class ItemMap(dict):
     """
     Class to store the mappings between item ID and item name.
     """
     def __init__(self):
-        self.item_ids = {}
+        super().__init__()
         self._initializeItemIDs()
 
     def _initializeItemIDs(self):
         api = APIResources(headers=headers)
         response = api.getMapping()
         for item in response:
-            self.item_ids[str(item["id"])] = ItemInfo.fromDict(item)
-            print(self.item_ids[str(item["id"])].__dict__)
+            self[str(item["id"])] = ItemInfo.fromDict(item)
 
     def printItemIDsMapping(self):
-        print(self.item_ids)
+        print(self)
 
     def idLookup(self, id: str) -> ItemInfo:
-        return self.item_ids[id]
+        return self[id]
 
