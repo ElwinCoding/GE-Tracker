@@ -4,7 +4,7 @@ with open("mapping.json") as file:
     map = json.load(file)
 
 # class to store the dictionaries
-class itemID:
+class ItemID:
     def __init__(self):
         self.ItemID = {}
         for item in map:
@@ -18,8 +18,3 @@ class itemID:
             return self.ItemID[id]
         else:
             return self.ItemID[id][index]
-
-# guh = database()
-# guh.print_database()
-# guh.print_database()
-#print((guh.idLookup("27202")))

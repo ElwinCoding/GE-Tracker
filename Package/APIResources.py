@@ -1,5 +1,12 @@
 import requests
 
+class APIResourcesConstants:
+    FIVE_MINUTES = "/5m"
+    ONE_HOUR = "/1h"
+    TIME_SERIES = "/timeseries"
+    MAPPING = "/mapping"
+    LATEST = "/latest"
+
 
 class APIResources:
     def __init__(self, headers):
@@ -7,19 +14,19 @@ class APIResources:
         self.headers = headers
 
     def get5mUrl(self):
-        return self.base_url + "/5m"
+        return self.base_url + APIResourcesConstants.FIVE_MINUTES
 
     def get1hUrl(self):
-        return self.base_url + "/1h"
+        return self.base_url + APIResourcesConstants.ONE_HOUR
 
     def getTimeSeriesUrl(self):
-        return self.base_url + "/timeseries"
+        return self.base_url + APIResourcesConstants.TIME_SERIES
 
     def getMappingUrl(self):
-        return self.base_url + "/mapping"
+        return self.base_url + APIResourcesConstants.MAPPING
 
     def getLatestUrl(self):
-        return self.base_url + "/latest"
+        return self.base_url + APIResourcesConstants.LATEST
 
     def get5m(self, timestamp=None):
         return requests.get(self.get5mUrl(), headers=self.headers, params=timestamp).json()
