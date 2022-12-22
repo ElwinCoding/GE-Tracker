@@ -1,5 +1,5 @@
 import requests
-from ItemID import ItemID
+from ItemID import ItemMap
 import time
 import tabulate
 
@@ -26,12 +26,12 @@ response_24h = response_24h.json()
 
 dumps = []
 crashes = []
-name = ItemID()
+item_map = ItemMap()
 
 def volume_check(volume, margin, item):
     if margin >= 200000:
         return True
-    elif margin <= 200000 and volume > name.idLookup(item,1):
+    elif margin <= 200000 and volume > item_map.idLookup(item).limit:
         return True
     else:
         return False
@@ -51,16 +51,16 @@ for item in response_10m["data"]:
     if avg_buy != None and high < low:
         difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
-        potential = margin * name.idLookup(item, 1)
+        potential = margin * item_map.idLookup(item).limit
         if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
-            dumps.append([name.idLookup(item, 0), high, low, volume, name.idLookup(item, 1),potential])
+            dumps.append([item_map.idLookup(item).name, high, low, volume, item_map.idLookup(item).limit, potential])
 
     elif avg_sell != None and high > low:
         difference = int((avg_sell - low)/avg_sell * 100)
         margin = high - low
-        potential = margin * name.idLookup(item, 1)
+        potential = margin * item_map.idLookup(item).limit
         if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
-            crashes.append([name.idLookup(item, 0), high, low, volume, name.idLookup(item, 1),potential])
+            crashes.append([item_map.idLookup(item).name, high, low, volume, item_map.idLookup(item).limit, potential])
 
 dumps.sort(reverse= True)
 crashes.sort(reverse= True)

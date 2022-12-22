@@ -5,12 +5,45 @@ headers = {
 }
 
 
-class ItemIDConstants:
-    ITEM_NAME = 0
-    ITEM_LIMIT = 1
+class ItemInfo:
+    def __init__(
+            self,
+            examine=None,
+            id=None,
+            members=None,
+            lowalch=None,
+            limit=None,
+            value=None,
+            highalch=None,
+            icon=None,
+            name=None
+    ):
+        self.examine = examine
+        self.id = id
+        self.members = members
+        self.lowalch = lowalch
+        self.limit = limit
+        self.value = value
+        self.highalch = highalch
+        self.icon = icon
+        self.name = name
+
+    @classmethod
+    def fromDict(cls, dict):
+        return ItemInfo(
+            examine=dict.get('examine', None),
+            id=dict.get('id', None),
+            members=dict.get('members', None),
+            lowalch=dict.get('lowalch', None),
+            limit=dict.get('limit', 0),
+            value=dict.get('value', None),
+            highalch=dict.get('highalch', None),
+            icon=dict.get('icon', None),
+            name=dict.get('name', None)
+        )
 
 
-class ItemID:
+class ItemMap:
     """
     Class to store the mappings between item ID and item name.
     """
@@ -21,46 +54,13 @@ class ItemID:
     def _initializeItemIDs(self):
         api = APIResources(headers=headers)
         response = api.getMapping()
-        print(response)
         for item in response:
-            self.item_ids[str(item["id"])] = [item["name"], item.get("limit", 1)]
+            self.item_ids[str(item["id"])] = ItemInfo.fromDict(item)
+            print(self.item_ids[str(item["id"])].__dict__)
 
     def printItemIDsMapping(self):
         print(self.item_ids)
 
-    def idLookup(self, id, index=None):
-        if index is None:
-            return self.item_ids[id]
-        else:
-            return self.item_ids[id][index]
-
-    def getName(self, id: str) -> str:
-        return self.item_ids[id][ItemIDConstants.ITEM_NAME]
-
-    def getLimit(self, id: str) -> int:
-        return self.item_ids[id][ItemIDConstants.ITEM_LIMIT]
-
-class ItemInfo:
-    def __init__(
-            self,
-            examine,
-            id,
-            members,
-            low_alch,
-            limit,
-            value,
-            high_alch,
-            icon,
-            name
-    ):
-        self.examine = examine
-        self.id = id
-        self.members = members
-        self.low_alch = low_alch
-        self.limit = limit
-        self.value = value
-        self.high_alch = high_alch
-        self.icon = icon
-        self.name = name
-
+    def idLookup(self, id: str) -> ItemInfo:
+        return self.item_ids[id]
 
