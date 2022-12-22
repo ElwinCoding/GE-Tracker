@@ -21,6 +21,7 @@ class ItemID:
     def _initializeItemIDs(self):
         api = APIResources(headers=headers)
         response = api.getMapping()
+        print(response)
         for item in response:
             self.item_ids[str(item["id"])] = [item["name"], item.get("limit", 1)]
 
@@ -38,3 +39,28 @@ class ItemID:
 
     def getLimit(self, id: str) -> int:
         return self.item_ids[id][ItemIDConstants.ITEM_LIMIT]
+
+class ItemInfo:
+    def __init__(
+            self,
+            examine,
+            id,
+            members,
+            low_alch,
+            limit,
+            value,
+            high_alch,
+            icon,
+            name
+    ):
+        self.examine = examine
+        self.id = id
+        self.members = members
+        self.low_alch = low_alch
+        self.limit = limit
+        self.value = value
+        self.high_alch = high_alch
+        self.icon = icon
+        self.name = name
+
+

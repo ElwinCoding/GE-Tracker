@@ -15,19 +15,19 @@ class APIResources:
         self.headers = headers
 
     def get5mUrl(self):
-        return self.base_url + APIResourcesConstants.FIVE_MINUTES
+        return f"{self.base_url}{APIResourcesConstants.FIVE_MINUTES}"
 
     def get1hUrl(self):
-        return self.base_url + APIResourcesConstants.ONE_HOUR
+        return f"{self.base_url}{APIResourcesConstants.ONE_HOUR}"
 
     def getTimeSeriesUrl(self):
-        return self.base_url + APIResourcesConstants.TIME_SERIES
+        return f"{self.base_url}{APIResourcesConstants.TIME_SERIES}"
 
     def getMappingUrl(self):
-        return self.base_url + APIResourcesConstants.MAPPING
+        return f"{self.base_url}{APIResourcesConstants.MAPPING}"
 
     def getLatestUrl(self):
-        return self.base_url + APIResourcesConstants.LATEST
+        return f"{self.base_url}{APIResourcesConstants.LATEST}"
 
     def get5m(self, timestamp=None):
         return requests.get(self.get5mUrl(), headers=self.headers, params=timestamp).json()
