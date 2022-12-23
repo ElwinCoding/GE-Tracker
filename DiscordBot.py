@@ -34,7 +34,7 @@ async def on_message(message):
     username = str(message.author).split('#')[0]
     user_message = str(message.content)
     channel = str(message.channel.name)
-    print(f"{username}{user_message}{channel}")
+    print(f"{username} {user_message} {channel}")
 
 client.run(environment_variables.TOKEN)
 
