@@ -1,13 +1,6 @@
-import requests
 from APIResources import APIResources
 from ItemID import ItemMap
-import time
 import tabulate
-
-url_latest = "https://prices.runescape.wiki/api/v1/osrs/latest"
-url_1h = "https://prices.runescape.wiki/api/v1/osrs/1h"
-url_10m = "https://prices.runescape.wiki/api/v1/osrs/10m"
-url_24h = "https://prices.runescape.wiki/api/v1/osrs/24h"
 
 headers = {
     "User-Agent": "dump watcher - @Roflnator#3778"
@@ -49,22 +42,22 @@ for item in response_10m["data"]:
     avg_buy = response_10m["data"][item]["avgHighPrice"]
     avg_sell = response_10m["data"][item]["avgLowPrice"]
 
-    if avg_buy != None and high < low:
+    if avg_buy is not None and high < low:
         difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
         potential = margin * item_map[item].limit
         if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
             dumps.append([item_map[item].name, high, low, volume, item_map[item].limit, potential])
 
-    elif avg_sell != None and high > low:
+    elif avg_sell is not None and high > low:
         difference = int((avg_sell - low)/avg_sell * 100)
         margin = high - low
         potential = margin * item_map[item].limit
         if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
             crashes.append([item_map[item].name, high, low, volume, item_map[item].limit, potential])
 
-dumps.sort(reverse= True)
-crashes.sort(reverse= True)
+dumps.sort(reverse=True)
+crashes.sort(reverse=True)
 
 columns = ["Item", "Buy Price", "Sell Price", "24h Volume", "Limit", "Potential"]
 

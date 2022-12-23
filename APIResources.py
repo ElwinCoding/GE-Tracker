@@ -1,5 +1,6 @@
 import requests
 
+
 class APIResourcesConstants:
     BASE_URL = 'https://prices.runescape.wiki/api/v1/osrs'
     FIVE_MINUTES = "/5m"
