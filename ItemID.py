@@ -5,6 +5,51 @@ headers = {
 }
 
 
+class PriceDatabase(dict):
+    def __init__(self):
+        super().__init__()
+
+
+class ItemDatabase(dict):
+    """
+    class to store info and pricing of an item
+    """
+    def __init__(self):
+        super().__init__()
+        self._initializeDatabase()
+        self.updateVolume()
+
+    def _initializeDatabase(self):
+        api = APIResources(headers=headers)
+        response = api.getMapping()
+        for item in response:
+            self[str(item["id"])] = Item(ItemInfo.fromDict(item), ItemPricing())
+
+    def updateVolume(self):
+        api = APIResources(headers=headers)
+        response = api.getVolume()
+        # remove Jagex and Bot timestamp keys
+        response.popitem()
+        response.popitem()
+        for item in response:
+            self[item].item_pricing.volume = response[item].get("volume", None)
+
+
+class Item:
+    def __init__(self, item_info=None, item_pricing=None):
+        self.item_info = item_info
+        self.item_pricing = item_pricing
+
+
+class ItemPricing:
+    def __init__(self):
+        self.volume = None
+        self.rolling_high = None
+        self.rolling_low = None
+        self.high = None
+        self.low = None
+
+
 class ItemInfo:
     def __init__(
             self,
@@ -16,7 +61,7 @@ class ItemInfo:
             value=None,
             highalch=None,
             icon=None,
-            name=None
+            name=None,
     ):
         self.examine = examine
         self.id = id
@@ -62,4 +107,3 @@ class ItemMap(dict):
 
     def idLookup(self, id: str) -> ItemInfo:
         return self[id]
-

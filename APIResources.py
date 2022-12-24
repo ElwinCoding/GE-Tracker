@@ -62,3 +62,6 @@ class APIResources:
 
     def getMapping(self):
         return requests.get(self.getMappingUrl(), headers=self.headers).json()
+
+    def getVolume(self):
+        return requests.get("https://chisel.weirdgloop.org/gazproj/gazbot/os_dump.json", headers=self.headers).json()
