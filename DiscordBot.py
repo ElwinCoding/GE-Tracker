@@ -1,24 +1,30 @@
 import discord
 import re
+import time
+import threading
+import logging
+
+
+class DiscordEnvironmentVariables:
+    def __init__(self, token=None):
+        self.token = token
 
 
 class DiscordEnvironmentParser:
     """
-    Obtains information from discord_token.env and stores it in this class.
+    Obtains information from discord_token.env and returns a DiscordEnvironmentVariables object.
     """
-
-    def __init__(self):
-        self.TOKEN = None
-
-    def getEnvironmentVariables(self):
+    @classmethod
+    def getEnvironmentVariables(cls) -> DiscordEnvironmentVariables:
+        environ_variables = DiscordEnvironmentVariables()
         regex = re.compile("TOKEN=(.*)$")
         with open("discord_token.env") as f:
             for line in f:
-                self.TOKEN = regex.search(line).group(1)
+                environ_variables.token = regex.search(line).group(1)
+        return environ_variables
 
 
-environment_variables = DiscordEnvironmentParser()
-environment_variables.getEnvironmentVariables()
+environment_variables = DiscordEnvironmentParser.getEnvironmentVariables()
 
 intents = discord.Intents().all()
 client = discord.Client(intents=intents)
@@ -34,8 +40,18 @@ async def on_message(message):
     username = str(message.author).split('#')[0]
     user_message = str(message.content)
     channel = str(message.channel.name)
-    print(f"{username} {user_message} {channel}")
+    if message.content.startswith('!hello'):
+        reply = f"Hi, {username} you nincompoop"
+        await message.channel.send(reply)
 
-client.run(environment_variables.TOKEN)
+
+def doSomeProcessing():
+    threading.Timer(interval=60, function=doSomeProcessing).start()
+    logging.info("Doing something")
+    time.sleep(2)
+    logging.info("Finished doing something")
 
 
+logging.basicConfig(level=logging.INFO)
+doSomeProcessing()
+client.run(token=environment_variables.token)
