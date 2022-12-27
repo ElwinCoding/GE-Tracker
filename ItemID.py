@@ -1,16 +1,56 @@
+import collections
+
 from APIResources import APIResources
+from collections import deque
 
 headers = {
     "User-Agent": "ID to item - @Roflnator#3778"
 }
 
 
-class PriceDatabase(dict):
+class ItemQueues(dict):
+    """
+    class to store collection of queues for item prices
+    """
     def __init__(self):
         super().__init__()
+        self._initializeQueues()
+        self.updateQueues()
+
+    def _initializeQueues(self):
+        """
+        only creates queues for items with data from past 24h
+        """
+        api = APIResources(headers=headers)
+        response = api.get24h()
+        for item in response["data"]:
+            high_price = response["data"][item]["avgHighPrice"]
+            low_price = response["data"][item]["avgLowPrice"]
+            if high_price is None or low_price is None:
+                continue
+            else:
+                self[item] = {"highPrices": collections.deque([high_price], maxlen=10),
+                              "lowPrices": collections.deque([low_price], maxlen=10),
+                              "highRolling": 0,
+                              "lowRolling": 0}
+
+    def updateQueues(self):
+        """
+        updates queues in self
+        """
+        api = APIResources(headers=headers)
+        response = api.getLatest()
+        for item in self:
+            high = response["data"][item]["high"]
+            low = response["data"][item]["high"]
+            self[item]["highPrices"].append(high)
+            self[item]["lowPrices"].append(low)
+
+    def getRolling(self):
+        raise NotImplemented
 
 
-class ItemDatabase(dict):
+class ItemCollection(dict):
     """
     class to store info and pricing of an item
     """
@@ -18,12 +58,20 @@ class ItemDatabase(dict):
         super().__init__()
         self._initializeDatabase()
         self.updateVolume()
+        self.updatePrices()
 
     def _initializeDatabase(self):
+        """
+        compares Item IDs between mapping and latest to create entries
+        """
         api = APIResources(headers=headers)
-        response = api.getMapping()
-        for item in response:
-            self[str(item["id"])] = Item(ItemInfo.fromDict(item), ItemPricing())
+        mapping = api.getMapping()
+        response = api.getLatest()["data"]
+        for item in mapping:
+            if response.get(str(item["id"])) is None:
+                continue
+            else:
+                self[str(item["id"])] = Item(ItemInfo.fromDict(item), ItemPricing())
 
     def updateVolume(self):
         api = APIResources(headers=headers)
@@ -31,8 +79,15 @@ class ItemDatabase(dict):
         # remove Jagex and Bot timestamp keys
         response.popitem()
         response.popitem()
-        for item in response:
+        for item in self:
             self[item].item_pricing.volume = response[item].get("volume", None)
+
+    def updatePrices(self):
+        api = APIResources(headers=headers)
+        response = api.getLatest()["data"]
+        for item in self:
+            self[item].item_pricing.high = response[item]["high"]
+            self[item].item_pricing.low = response[item]["low"]
 
 
 class Item:
@@ -44,10 +99,11 @@ class Item:
 class ItemPricing:
     def __init__(self):
         self.volume = None
-        self.rolling_high = None
-        self.rolling_low = None
         self.high = None
         self.low = None
+
+    def printPricing(self):
+        print("High:", self.high, "| Low:", self.low, "| Volume:", self.volume)
 
 
 class ItemInfo:
