@@ -42,21 +42,25 @@ class ItemQueues(dict):
         """
         api = APIResources(headers=headers)
         response = api.getLatest()
-        for item in self.keys():
-            high = response["data"][item]["high"]
-            low = response["data"][item]["high"]
-            self[item]["highPrices"].append(high)
-            self[item]["lowPrices"].append(low)
+        for id, prices in self.items():
+            high = response["data"][id]["high"]
+            low = response["data"][id]["high"]
+            prices["highPrices"].append(high)
+            prices["lowPrices"].append(low)
 
-    def getRolling(self):
-        ans = {}
+    def updateRolling(self):
+        def f(idx, price, denominator): return round(price * (idx / denominator))
         for id, queue in self.items():
-            queue_len = len(queue)
-            def f(idx, price): return price*(queue_len - idx/queue_len)
-            high_prices_weighted = [f(i, high_price) for i, high_price in enumerate(queue['highPrices'])]
-            low_prices_weighted = [f(i, low_price) for i, low_price in enumerate(queue['lowPrices'])]
-            ans[id] = {"highPrices": high_prices_weighted, "lowPrices": low_prices_weighted}
-        return ans
+            # highPrices and lowPrices should always be the same length
+            denominator = sum(range(1, len(queue["highPrices"]) + 1))
+            length = len(queue["highPrices"])
+            high_prices_weighted = [f(i, high_price, denominator) for i, high_price in enumerate(queue['highPrices'], start=1)]
+            low_prices_weighted = [f(i, low_price, denominator) for i, low_price in enumerate(queue['lowPrices'], start=1)]
+            high_rolling_average = sum(high_prices_weighted)
+            low_rolling_average = sum(low_prices_weighted)
+            self[id]["highRolling"] = high_rolling_average
+            self[id]["lowRolling"] = low_rolling_average
+
 
     def findStdDev(self):
         ans = {}
