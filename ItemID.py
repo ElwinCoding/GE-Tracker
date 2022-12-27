@@ -1,4 +1,4 @@
-import collections
+import numpy as np
 
 from APIResources import APIResources
 from collections import deque
@@ -12,6 +12,8 @@ class ItemQueues(dict):
     """
     class to store collection of queues for item prices
     """
+    MAX_LEN_STORED = 10
+
     def __init__(self):
         super().__init__()
         self._initializeQueues()
@@ -29,8 +31,8 @@ class ItemQueues(dict):
             if high_price is None or low_price is None:
                 continue
             else:
-                self[item] = {"highPrices": collections.deque([high_price], maxlen=10),
-                              "lowPrices": collections.deque([low_price], maxlen=10),
+                self[item] = {"highPrices": deque([high_price], maxlen=self.MAX_LEN_STORED),
+                              "lowPrices": deque([low_price], maxlen=self.MAX_LEN_STORED),
                               "highRolling": 0,
                               "lowRolling": 0}
 
@@ -40,14 +42,27 @@ class ItemQueues(dict):
         """
         api = APIResources(headers=headers)
         response = api.getLatest()
-        for item in self:
+        for item in self.keys():
             high = response["data"][item]["high"]
             low = response["data"][item]["high"]
             self[item]["highPrices"].append(high)
             self[item]["lowPrices"].append(low)
 
     def getRolling(self):
-        raise NotImplemented
+        ans = {}
+        for id, queue in self.items():
+            queue_len = len(queue)
+            def f(idx, price): return price*(queue_len - idx/queue_len)
+            high_prices_weighted = [f(i, high_price) for i, high_price in enumerate(queue['highPrices'])]
+            low_prices_weighted = [f(i, low_price) for i, low_price in enumerate(queue['lowPrices'])]
+            ans[id] = {"highPrices": high_prices_weighted, "lowPrices": low_prices_weighted}
+        return ans
+
+    def findStdDev(self):
+        ans = {}
+        for id, queue in self.items():
+            ans[id] = np.std(queue)
+        return ans
 
 
 class ItemCollection(dict):
