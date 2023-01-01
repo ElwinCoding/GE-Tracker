@@ -16,6 +16,8 @@ response_10m = api.get10m()
 
 response_24h = api.get24h()
 
+volume = api.getVolume()
+
 dumps = []
 crashes = []
 item_map = ItemMap()
@@ -34,10 +36,7 @@ for item in response_10m["data"]:
     high = response_latest["data"][item]["high"]
     low = response_latest["data"][item]["low"]
 
-    try:
-        volume = response_24h["data"][item]["highPriceVolume"] + response_24h["data"][item]["lowPriceVolume"]
-    except KeyError:
-        continue
+    item_volume = volume[item].get("volume")
 
     avg_buy = response_10m["data"][item]["avgHighPrice"]
     avg_sell = response_10m["data"][item]["avgLowPrice"]
@@ -46,15 +45,15 @@ for item in response_10m["data"]:
         difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
         potential = margin * item_map[item].limit
-        if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
-            dumps.append([item_map[item].name, high, low, volume, item_map[item].limit, potential])
+        if difference >= 5 and potential >= 100000 and volume_check(item_volume, margin, item):
+            dumps.append([item_map[item].name, high, low, item_volume, item_map[item].limit, potential])
 
     elif avg_sell is not None and high > low:
         difference = int((avg_sell - low)/avg_sell * 100)
         margin = high - low
         potential = margin * item_map[item].limit
-        if difference >= 10 and potential >= 100000 and volume_check(volume, margin, item):
-            crashes.append([item_map[item].name, high, low, volume, item_map[item].limit, potential])
+        if difference >= 5 and potential >= 100000 and volume_check(item_volume, margin, item):
+            crashes.append([item_map[item].name, high, low, item_volume, item_map[item].limit, potential])
 
 dumps.sort(reverse=True)
 crashes.sort(reverse=True)
