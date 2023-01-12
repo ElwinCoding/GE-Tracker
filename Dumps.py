@@ -45,18 +45,18 @@ for item in response_10m["data"]:
         difference = int((avg_buy - high)/avg_buy * 100)
         margin = low - high
         potential = margin * item_map[item].limit
-        if difference >= 5 and potential >= 100000 and volume_check(item_volume, margin, item):
+        if difference >= 5 and potential >= 500000 and volume_check(item_volume, margin, item):
             dumps.append([item_map[item].name, high, low, item_volume, item_map[item].limit, potential])
 
     elif avg_sell is not None and high > low:
         difference = int((avg_sell - low)/avg_sell * 100)
         margin = high - low
         potential = margin * item_map[item].limit
-        if difference >= 5 and potential >= 100000 and volume_check(item_volume, margin, item):
+        if difference >= 5 and potential >= 500000 and volume_check(item_volume, margin, item):
             crashes.append([item_map[item].name, high, low, item_volume, item_map[item].limit, potential])
 
-dumps.sort(reverse=True)
-crashes.sort(reverse=True)
+dumps.sort(key=lambda x: x[-1], reverse=True)
+crashes.sort(key=lambda x: x[-1], reverse=True)
 
 columns = ["Item", "Buy Price", "Sell Price", "24h Volume", "Limit", "Potential"]
 
