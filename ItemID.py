@@ -138,6 +138,7 @@ class ItemQueues(dict):
     def __init__(self, item_collection: ItemCollection):
         super().__init__()
         self.item_collection = item_collection
+        self.api = APIResources(headers=headers)
         self._initializeQueues()
         self.updateQueues()
         self.updateRolling()
@@ -146,8 +147,7 @@ class ItemQueues(dict):
         """
         only creates queues for items with data from past 24h
         """
-        api = APIResources(headers=headers)
-        response = api.get24h()
+        response = self.api.get24h()
         for item in response[self.DATA]:
             high_price = response[self.DATA][item][self.AVG_HIGH_PRICE]
             low_price = response[self.DATA][item][self.AVG_LOW_PRICE]
@@ -159,14 +159,13 @@ class ItemQueues(dict):
                               "highRolling": 0,
                               "lowRolling": 0}
 
-        data_points = api.get5mMultiple(self.MAX_LEN_STORED - 2)
+        data_points = self.api.get5mMultiple(self.MAX_LEN_STORED - 2)
         for id, prices in self.items():
             for i in range(self.MAX_LEN_STORED - 2):
                 item = data_points[i]["data"].get(id)
                 if item is None:
                     continue
-                high = item["avgHighPrice"]
-                low = item["avgLowPrice"]
+                high, low = item["avgHighPrice"], item["avgLowPrice"]
                 # if either is None, set to most recent price point
                 if high is None:
                     high = prices["highPrices"][-1]
@@ -179,8 +178,7 @@ class ItemQueues(dict):
         """
         updates queues in self
         """
-        api = APIResources(headers=headers)
-        response = api.getLatest()
+        response = self.api.getLatest()
         for id, prices in self.items():
             high = response[self.DATA][id]["high"]
             low = response[self.DATA][id]["low"]
