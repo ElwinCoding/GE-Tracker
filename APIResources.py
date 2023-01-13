@@ -93,7 +93,7 @@ class APIResources:
             base -= 600
         return files
 
-    def get1hMultiply(self, counter):
+    def get1hMultiple(self, counter):
         base = time.time()
         # most recent 1h may result in empty data field, 2h delay to ensure data
         base = int(base - (base % 3600) - 7200)

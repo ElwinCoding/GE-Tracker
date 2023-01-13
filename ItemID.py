@@ -131,7 +131,7 @@ class ItemQueues(dict):
     DATA = "data"
     AVG_HIGH_PRICE = "avgHighPrice"
     AVG_LOW_PRICE = "avgLowPrice"
-    HIGH_VOLUME = 10000
+    HIGH_VOLUME = 50000
     ROI = 5
     POTENTIAL = 500000
 
@@ -157,9 +157,23 @@ class ItemQueues(dict):
                 self[item] = {"highPrices": deque([high_price], maxlen=self.MAX_LEN_STORED),
                               "lowPrices": deque([low_price], maxlen=self.MAX_LEN_STORED),
                               "highRolling": 0,
-                              "lowRolling": 0,
-                              "highTime": 0,
-                              "lowTime": 0}
+                              "lowRolling": 0}
+
+        data_points = api.get5mMultiple(self.MAX_LEN_STORED - 2)
+        for id, prices in self.items():
+            for i in range(self.MAX_LEN_STORED - 2):
+                item = data_points[i]["data"].get(id)
+                if item is None:
+                    continue
+                high = item["avgHighPrice"]
+                low = item["avgLowPrice"]
+                # if either is None, set to most recent price point
+                if high is None:
+                    high = prices["highPrices"][-1]
+                if low is None:
+                    low = prices["lowPrices"][-1]
+                prices["highPrices"].append(high)
+                prices["lowPrices"].append(low)
 
     def updateQueues(self):
         """
@@ -172,8 +186,6 @@ class ItemQueues(dict):
             low = response[self.DATA][id]["low"]
             prices["highPrices"].append(high)
             prices["lowPrices"].append(low)
-            prices["highTime"] = response[self.DATA][id]["highTime"]
-            prices["lowTime"] = response[self.DATA][id]["lowTime"]
 
     def updateRolling(self):
         def f(idx, price, denominator): return round(price * (idx / denominator))
