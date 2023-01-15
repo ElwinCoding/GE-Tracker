@@ -1,5 +1,5 @@
 import numpy as np
-
+import time
 from APIResources import APIResources
 from collections import deque
 
@@ -127,12 +127,11 @@ class ItemQueues(dict):
     """
     class to store collection of queues for item prices
     """
-    MAX_LEN_STORED = 10
+    MAX_LEN_STORED = 20
     DATA = "data"
     AVG_HIGH_PRICE = "avgHighPrice"
     AVG_LOW_PRICE = "avgLowPrice"
-    HIGH_VOLUME = 50000
-    ROI = 5
+    HIGH_VOLUME = 100000
     POTENTIAL = 500000
 
     def __init__(self, item_collection: ItemCollection):
@@ -157,7 +156,9 @@ class ItemQueues(dict):
                 self[item] = {"highPrices": deque([high_price], maxlen=self.MAX_LEN_STORED),
                               "lowPrices": deque([low_price], maxlen=self.MAX_LEN_STORED),
                               "highRolling": 0,
-                              "lowRolling": 0}
+                              "lowRolling": 0,
+                              "highTime": 0,
+                              "lowTime": 0}
 
         data_points = self.api.get5mMultiple(self.MAX_LEN_STORED - 2)
         for id, prices in self.items():
@@ -182,40 +183,46 @@ class ItemQueues(dict):
         for id, prices in self.items():
             high = response[self.DATA][id]["high"]
             low = response[self.DATA][id]["low"]
+            high_time = response[self.DATA][id]["highTime"]
+            low_time = response[self.DATA][id]["lowTime"]
             prices["highPrices"].append(high)
             prices["lowPrices"].append(low)
+            prices["highTime"] = high_time
+            prices["lowTime"] = low_time
 
     def updateRolling(self):
-        def f(idx, price, denominator): return round(price * (idx / denominator))
+        def f(idx, price, denominator): return price * (idx / denominator)
         for id, queue in self.items():
             # highPrices and lowPrices should always be the same length
             denominator = sum(range(1, len(queue["highPrices"]) + 1))
             high_prices_weighted = [f(i, high_price, denominator) for i, high_price in enumerate(queue['highPrices'], start=1)]
             low_prices_weighted = [f(i, low_price, denominator) for i, low_price in enumerate(queue['lowPrices'], start=1)]
-            high_rolling_average = sum(high_prices_weighted)
-            low_rolling_average = sum(low_prices_weighted)
+            high_rolling_average = round(sum(high_prices_weighted))
+            low_rolling_average = round(sum(low_prices_weighted))
             self[id]["highRolling"] = high_rolling_average
             self[id]["lowRolling"] = low_rolling_average
 
-    def findStdDev(self):
-        ans = {}
-        for id, queue in self.items():
-            ans[id] = np.std(queue)
-        return ans
-
-    def _filter(self, volume, potential, roi, limit, margin):
-        if volume is None or limit is None:
-            return False
-        if roi < self.ROI and potential < self.POTENTIAL:
-            return False
-        elif volume >= self.HIGH_VOLUME and (volume * 0.01) >= limit:
-            return True
-        elif volume < self.HIGH_VOLUME and (volume * 0.05 * margin) >= self.POTENTIAL:
-            return True
+    def _filter(self, volume, limit, margin, high_time, low_time):
+        # if no volume in past 24h
+        if volume is None:
+            return 0
+        # if latest buy and sell transaction occurred over 5m ago
+        current = time.time()
+        if current - high_time > 600 and current - low_time > 600:
+            return 0
+        # if buy limit is unknown
+        elif limit is None:
+            potential = volume * 0.05 * margin
+        # if item is high volume
+        elif volume >= self.HIGH_VOLUME:
+            potential = limit * margin
+        # if item is low volume
         else:
-            return False
+            potential = min(volume * 0.03, limit) * margin
 
-    def dump_checker(self):
+        return round(potential) if potential >= self.POTENTIAL else 0
+
+    def dumpChecker(self):
         """
         compare rolling and latest to find large differences
         """
@@ -225,34 +232,27 @@ class ItemQueues(dict):
             volume, limit, name = (
                 self.item_collection[id].item_pricing.volume,
                 self.item_collection[id].item_info.limit,
-                self.item_collection[id].item_info.name
+                self.item_collection[id].item_info.name,
             )
-            low_latest, high_latest = prices["lowPrices"][-1], prices["highPrices"][-1]
+            high_latest, high_previous = prices["highPrices"][-1], prices["highPrices"][-2]
+            low_latest = prices["lowPrices"][-1]
+            high_time, low_time = prices["highTime"], prices["lowTime"]
 
-            if high_latest < prices["highRolling"]:
-                margin = prices["highRolling"] - high_latest
-                potential = limit * margin
-                # Compares most recent buy price to rolling buy price and finds percent difference
-                roi = round((prices["highRolling"] - high_latest) / prices["highRolling"] * 100)
-                if self._filter(volume, potential, roi, limit, margin):
-                    buy_dumps.append([name, prices["highRolling"], high_latest, volume, limit, potential])
-            elif low_latest < prices["lowRolling"]:
-                margin = prices["highRolling"] - low_latest
-                potential = limit * margin
-                # Compares most recent sell price to rolling buy price and finds percentage difference
-                roi = round((prices["highRolling"] - low_latest) / prices["highRolling"] * 100)
-                if self._filter(volume, potential, roi, limit, margin):
-                    sell_dumps.append([name, prices["highRolling"], low_latest, volume, limit, potential])
+            # Compares most recent buy price to rolling buy price and finds percent difference
+            if round((prices["highRolling"] - high_latest) / prices["highRolling"] * 100) >= 5:
+                margin = high_previous - high_latest
+                potential = self._filter(volume, limit, margin, high_time, low_time)
+                if potential:
+                    buy_dumps.append([name, high_previous, high_latest, volume, limit, potential])
+            # Compares most recent sell price to rolling buy price and finds percentage difference
+            elif round((prices["lowRolling"] - low_latest) / prices["lowRolling"] * 100) >= 5:
+                margin = high_latest - low_latest
+                potential = self._filter(volume, limit, margin, high_time, low_time)
+                if potential:
+                    sell_dumps.append([name, high_latest, low_latest, volume, limit, potential])
             else:
                 continue
         buy_dumps.sort(key=lambda x: x[-1], reverse=True)
         sell_dumps.sort(key=lambda x: x[-1], reverse=True)
-        print("buys")
-        for item in buy_dumps[:10]:
-            print(item)
-        print("sells")
-        for item in sell_dumps[:10]:
-            print(item)
 
-    def spikes(self):
-        raise NotImplemented
+        return buy_dumps[:7], sell_dumps[:7]
