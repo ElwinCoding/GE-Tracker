@@ -208,7 +208,7 @@ class ItemQueues(dict):
             return 0
         # if latest buy and sell transaction occurred over 5m ago
         current = time.time()
-        if current - high_time > 600 and current - low_time > 600:
+        if current - high_time > 300 and current - low_time > 300:
             return 0
         # if buy limit is unknown
         elif limit is None:
