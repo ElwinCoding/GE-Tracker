@@ -6,7 +6,7 @@ import tabulate
 """
 this is a discord bot
 
-bot-test channel ID: 1064029569801265162
+bot-test channel ID:
 """
 
 intents = discord.Intents.all()
@@ -29,5 +29,3 @@ async def on_message(message):
         return
     if message.content.startswith("!hi"):
         await message.channel.send("Hello!")
-
-bot.run("MTA2NDAyNTA0MDY3MDE2NzE0MA.G26nZj.2-qDpC-1UvgdiahI3TJq3XFSBJANUqS0P_YWok")
